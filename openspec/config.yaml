@@ -1,0 +1,80 @@
+schema: spec-driven
+
+context: |
+  This is a skill-authoring repository. Every change here produces or improves
+  SKILL.md files and their supporting reference files consumed by AI agents.
+
+  Evaluation-first development is the norm: work is motivated by observed gaps
+  in agent behavior, not anticipated needs. Before writing skill content, identify
+  what the target AI model does wrong or incompletely today. After writing, verify behavior
+  changed using a fresh agent instance.
+
+  Conciseness is a first-class constraint. Only add content the executing agent
+  does not already know. Challenge every paragraph: does this justify its token
+  cost? Assume the agent is already a capable engineer — provide domain-specific
+  context, rules, and structure it cannot infer, nothing more.
+
+rules:
+  proposal:
+    - |
+      Include a "Baseline Measurement" section. Describe what the target AI model does today
+      without this skill or change — be specific. Name the exact queries or
+      scenarios where current behavior falls short (e.g., "When asked to create
+      a test plan, the model skips risk tiering and jumps straight to test cases").
+      Generic statements like "the model doesn't do this yet" are not acceptable.
+  specs:
+    - |
+      Include an "Evaluations" section with at least three evaluation scenarios
+      in this exact JSON format:
+        {
+          "query": "<the exact prompt a user would type>",
+          "expected_behavior": [
+            "<observable, checkable signal 1>",
+            "<observable, checkable signal 2>"
+          ]
+        }
+      Each expected_behavior entry must describe a specific, verifiable action
+      or output (e.g., "Assigns a risk tier before writing test cases").
+      Abstract qualities like "works correctly" or "handles the case" are not
+      acceptable.
+  tasks:
+    - |
+      Every task that writes or modifies skill content (any SKILL.md or file
+      inside a skill directory) MUST include three explicit sub-steps:
+
+      - **Implement**: state exactly which file changes and what content is
+        added or modified.
+      - **Observe**: spawn a fresh subagent with NO context from this change.
+        Provide it the updated skill content. Run a specific test query taken
+        directly from the spec's evaluation scenarios. List the expected signals
+        to watch for in the response.
+      - **Measure**: state explicit pass criteria, explicit fail criteria, and
+        a failure branch (e.g., "If fail: return to Implement, note which signal
+        was missing, revise and re-run Observe").
+
+      A task that modifies skill content is NOT complete until the Measure
+      sub-step passes. Do not mark it done after Implement alone.
+  skills:
+    - |
+      Skills are organized as Tier 2 (SKILL.md) + Tier 3 (supporting directories).
+      Tier 2 provides core content and progressive disclosure breadcrumbs to Tier 3.
+
+      Tier 3 directories follow three distinct patterns:
+
+      1. **references/** — Domain knowledge, structured by concept.
+         • Use for: specialized expertise, decision frameworks, methodologies.
+         • Examples: test strategies, design patterns, evaluation criteria.
+         • Disclosure: SKILL.md must explicitly signal when to reference 
+           (e.g., "For [CONCEPT], see references/[filename]").
+
+      2. **templates/** — Output contracts, examples, and schemas.
+         • Use for: exact output structure, format specifications, examples.
+         • Examples: prompt templates, response formats, JSON schemas.
+         • Disclosure: SKILL.md must explicitly signal when to reference
+           (e.g., "[See templates/[filename] for exact output structure]").
+
+      3. **misc/** — Supporting documents for inference.
+         • Use for: glossaries, flowcharts, tool comparisons, diagnostic aids.
+         • Disclosure: SKILL.md may include softer breadcrumbs without forcing deep reading
+           (e.g., "Glossary: misc/glossary.md").
+         • Agents should be able to discover and infer these without explicit guidance.
